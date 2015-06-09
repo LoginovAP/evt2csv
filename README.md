@@ -1,0 +1,1 @@
+Аналог Event text to CSV Extractor на Python3
