@@ -45,7 +45,7 @@ def evt_extract(string, sr,
                 a = i
             elif evt_body[0][i] == "\"" and st == 1:
                 evt_name = [evt_body[0][a + 1:i:1], a, i]
-                if rw == True:
+                if rw == True and evt_name[0].find("EVT_") != 0:
                     evt_body[0] = evt_body[0][0:a + 1:1] + "EVT_" + str(evt_id) + "_NAME" + evt_body[0][
                                                                                             i:len(evt_body[0]):1]
                 break
@@ -61,7 +61,7 @@ def evt_extract(string, sr,
                 a = i
             elif evt_body[0][i] == "\"" and st == 1:
                 evt_desc = [evt_body[0][a + 1:i:1], a, i]
-                if rw == True:
+                if rw == True and evt_desc[0].find("EVT_") != 0:
                     evt_body[0] = evt_body[0][0:a + 1:1] + "EVT_" + str(evt_id) + "_DESC" + evt_body[0][
                                                                                             i:len(evt_body[0]):1]
 
@@ -94,7 +94,7 @@ def evt_extract(string, sr,
                     a = i
                 elif evt_body[0][i] == "\"" and st == 1:
                     evt_actnames.append(evt_body[0][a + 1:i:1])
-                    if rw == True:
+                    if rw == True and evt_actnames[len(evt_actnames)-1].find("EVT_") != 0:
                         evt_body[0] = evt_body[0][0:a + 1:1] + "EVT_" + str(evt_id) + "_OPTION" \
                                       + {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}.get(j, "ERR") \
                                       + evt_body[0][i:len(evt_body[0]):1]
