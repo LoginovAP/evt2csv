@@ -20,8 +20,8 @@ def evt_extract(string, sr,
                 evt_body = [string[start:i + 1:1], i + 1]
                 part1 = string[0:start:1]
                 part2 = string[i + 1:len(string):1]
-				while part2.rfind("\n") == 0:
-					part2 = part2[0:len(part2)-1:1]
+                while part2.rfind("\n") == 0:
+                    part2 = part2[0:len(part2)-1:1]
                 break
         """
         EVENT ID
