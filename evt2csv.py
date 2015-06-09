@@ -1,4 +1,8 @@
-def evt_extract(string, sr, rw):  # String of event file ; end index of previous event of 0 for first event ; state (T/F) for replace names with 'EVT_*'
+import sys, os, fnmatch
+
+
+def evt_extract(string, sr,
+                rw):  # String of event file ; end index of previous event of 0 for first event ; state (T/F) for replace names with 'EVT_*'
     start = string.lower().find("event = {", sr)
     if start == -1:
         return -1
@@ -13,9 +17,11 @@ def evt_extract(string, sr, rw):  # String of event file ; end index of previous
             elif string[i] == "}":
                 level = level - 1
             if level == 0:  # if event ends
-                evt_body = [string[start:i+1:1], i+1]
+                evt_body = [string[start:i + 1:1], i + 1]
                 part1 = string[0:start:1]
-                part2 = string[i+1:len(string):1]
+                part2 = string[i + 1:len(string):1]
+				while part2.rfind("\n") == 0:
+					part2 = part2[0:len(part2)-1:1]
                 break
         """
         EVENT ID
@@ -40,7 +46,8 @@ def evt_extract(string, sr, rw):  # String of event file ; end index of previous
             elif evt_body[0][i] == "\"" and st == 1:
                 evt_name = [evt_body[0][a + 1:i:1], a, i]
                 if rw == True:
-                    evt_body[0] = evt_body[0][0:a+1:1] + "EVT_" + str(evt_id) + "_NAME" + evt_body[0][i:len(evt_body[0]):1]
+                    evt_body[0] = evt_body[0][0:a + 1:1] + "EVT_" + str(evt_id) + "_NAME" + evt_body[0][
+                                                                                            i:len(evt_body[0]):1]
                 break
         """
         DESCRIPTION
@@ -55,7 +62,8 @@ def evt_extract(string, sr, rw):  # String of event file ; end index of previous
             elif evt_body[0][i] == "\"" and st == 1:
                 evt_desc = [evt_body[0][a + 1:i:1], a, i]
                 if rw == True:
-                    evt_body[0] = evt_body[0][0:a+1:1] + "EVT_" + str(evt_id) + "_DESC" + evt_body[0][i:len(evt_body[0]):1]
+                    evt_body[0] = evt_body[0][0:a + 1:1] + "EVT_" + str(evt_id) + "_DESC" + evt_body[0][
+                                                                                            i:len(evt_body[0]):1]
 
                 break
         """
@@ -87,7 +95,7 @@ def evt_extract(string, sr, rw):  # String of event file ; end index of previous
                 elif evt_body[0][i] == "\"" and st == 1:
                     evt_actnames.append(evt_body[0][a + 1:i:1])
                     if rw == True:
-                        evt_body[0] = evt_body[0][0:a+1:1] + "EVT_" + str(evt_id) + "_OPTION" \
+                        evt_body[0] = evt_body[0][0:a + 1:1] + "EVT_" + str(evt_id) + "_OPTION" \
                                       + {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}.get(j, "ERR") \
                                       + evt_body[0][i:len(evt_body[0]):1]
                     break
@@ -99,40 +107,36 @@ def evt_extract(string, sr, rw):  # String of event file ; end index of previous
         else:
             new_string = ""
         if new_string.find(part2) == 0:
-            index = sr+1
+            index = sr + 1
         else:
             index = new_string.find(part2)
 
         return [evt_id, evt_name[0], evt_desc[0], act_count, evt_actnames, index, new_string]
 
-
-f = open('eventtest.txt')
-file_str = f.read()
-f.close()
-
-buf = [0, 0, 0, 0, 0, 0]
+evts = os.listdir(os.getcwd()+"\\input\\")
 str_csv = ""
+for cur_evt in evts:
+    with open(os.getcwd()+"\\input\\"+cur_evt,mode='r') as f:
+        file_str = f.read()
 
-while True:
-    buf = evt_extract(file_str, buf[5], True)
-    if buf == -1:
-        break
-    if buf[1].find("EVT_") != 0:
-        str_csv += "EVT_" + str(buf[0]) + "_NAME;" + buf[1] + ";\n"
-    if buf[2].find("EVT_") != 0:
-        str_csv += "EVT_" + str(buf[0]) + "_DESC;" + buf[2] + ";\n"
-    for i in range(buf[3]):
-        if buf[4][i].find("EVT_") != 0:
-            str_csv += "EVT_" + str(buf[0]) + "_OPTION" \
-                    + {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}.get(i, "ERR") \
-                    + ";" + buf[4][i] + ";\n"
-    file_str = buf[6]
+    buf = [0, 0, 0, 0, 0, 0]
+    while True:
+        buf = evt_extract(file_str, buf[5], True)
+        if buf == -1:
+            break
+        if buf[1].find("EVT_") != 0:
+            str_csv += "EVT_" + str(buf[0]) + "_NAME;" + buf[1] + ";\n"
+        if buf[2].find("EVT_") != 0:
+            str_csv += "EVT_" + str(buf[0]) + "_DESC;" + buf[2] + ";\n"
+        for i in range(buf[3]):
+            if buf[4][i].find("EVT_") != 0:
+                str_csv += "EVT_" + str(buf[0]) + "_OPTION" \
+                           + {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}.get(i, "ERR") \
+                           + ";" + buf[4][i] + ";\n"
+        file_str = buf[6]
 
+    with open(os.getcwd()+"\\output\\"+cur_evt, mode='w') as f:
+        f.write(file_str)
 
-f = open("out.txt", mode='w')
-f.write(file_str)
-f.close()
-
-f = open("out.csv", mode='w')
-f.write(str_csv)
-f.close()
+with open(os.getcwd()+"\\output\\out.csv", mode='w') as f:
+    f.write(str_csv)
