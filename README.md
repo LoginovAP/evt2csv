@@ -1,1 +1,1 @@
-Event text to CSV Extractor analog on Python3
+Event text to CSV Extractor analog on Python
