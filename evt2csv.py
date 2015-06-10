@@ -76,16 +76,27 @@ def evt_extract(string, sr,
         ast = 0
         evt_actnames = []
         for j in range(act_count):
-            s_act = [evt_body[0].lower().find("action =", ast), evt_body[0].lower().find("action_a =", ast), \
-                     evt_body[0].lower().find("action_b =", ast), evt_body[0].lower().find("action_c =", ast), \
-                     evt_body[0].lower().find("action_d =", ast), evt_body[0].lower().find("action_e =", ast), \
-                     evt_body[0].lower().find("action_f =", ast), evt_body[0].lower().find("action_g =", ast)]
-
-            for i in s_act:
-                if i == -1:
-                    s_act.remove(i)
-            ast = s_act[0] + 5
-            s_actname = evt_body[0].lower().find("name =", s_act[0])
+            s_act = []
+            if evt_body[0].lower().find("action =", ast) != -1:
+                s_act.append(evt_body[0].lower().find("action =", ast))
+            elif evt_body[0].lower().find("action_a =", ast) != -1:
+                s_act.append(evt_body[0].lower().find("action_a =", ast))
+            elif evt_body[0].lower().find("action_b =", ast) != -1:
+                s_act.append(evt_body[0].lower().find("action_b =", ast))
+            elif evt_body[0].lower().find("action_c =", ast) != -1:
+                s_act.append(evt_body[0].lower().find("action_c =", ast))
+            elif evt_body[0].lower().find("action_d =", ast) != -1:
+                s_act.append(evt_body[0].lower().find("action_d =", ast))
+            elif evt_body[0].lower().find("action_e =", ast) != -1:
+                s_act.append(evt_body[0].lower().find("action_e =", ast))
+            elif evt_body[0].lower().find("action_f =", ast) != -1:
+                s_act.append(evt_body[0].lower().find("action_f =", ast))
+            elif evt_body[0].lower().find("action_g =", ast) != -1:
+                s_act.append(evt_body[0].lower().find("action_g =", ast))
+            s_act.sort()
+            print (s_act)
+            ast = s_act[0] + 1
+            s_actname = evt_body[0].lower().find("name =", sorted(s_act)[0])
             a = 0
             st = 0
             for i in range(s_actname, len(evt_body[0])):
