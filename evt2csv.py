@@ -33,6 +33,7 @@ def evt_extract(string, sr,
                 evt_id.replace(" ", "")
                 evt_id = int(evt_id)
                 break
+        print(evt_id)
         """
         NAME
         """
@@ -94,20 +95,21 @@ def evt_extract(string, sr,
             elif evt_body[0].lower().find("action_g =", ast) != -1:
                 s_act = evt_body[0].lower().find("action_g =", ast)
             ast = s_act + 1
-            s_actname = evt_body[0].lower().find("name =", s_act)
-            a = 0
-            st = 0
-            for i in range(s_actname, len(evt_body[0])):
-                if evt_body[0][i] == "\"" and st == 0:
-                    st = 1
-                    a = i
-                elif evt_body[0][i] == "\"" and st == 1:
-                    evt_actnames.append(evt_body[0][a + 1:i:1])
-                    if rw == True and evt_actnames[len(evt_actnames)-1].find("EVT_") != 0:
-                        evt_body[0] = evt_body[0][0:a + 1:1] + "EVT_" + str(evt_id) + "_OPTION" \
-                                      + {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}.get(j, "ERR") \
-                                      + evt_body[0][i:len(evt_body[0]):1]
-                    break
+            if evt_body[0].lower().find("name =", s_act) != -1:
+                s_actname = evt_body[0].lower().find("name =", s_act)
+                a = 0
+                st = 0
+                for i in range(s_actname, len(evt_body[0])):
+                    if evt_body[0][i] == "\"" and st == 0:
+                        st = 1
+                        a = i
+                    elif evt_body[0][i] == "\"" and st == 1:
+                        evt_actnames.append(evt_body[0][a + 1:i:1])
+                        if rw == True and evt_actnames[len(evt_actnames)-1].find("EVT_") != 0:
+                            evt_body[0] = evt_body[0][0:a + 1:1] + "EVT_" + str(evt_id) + "_OPTION" \
+                                          + {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}.get(j, "ERR") \
+                                          + evt_body[0][i:len(evt_body[0]):1]
+                        break
         """
         REPLACING NAMES, DESC'S
         """
