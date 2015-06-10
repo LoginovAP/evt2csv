@@ -104,12 +104,9 @@ def evt_extract(string, sr,
         """
         if rw:
             new_string = part1 + evt_body[0] + part2
+            index = len(part1+evt_body[0]) + 1
         else:
             new_string = ""
-        if new_string.find(part2) == 0:
-            index = sr + 1
-        else:
-            index = new_string.find(part2)
 
         return [evt_id, evt_name[0], evt_desc[0], act_count, evt_actnames, index, new_string]
 
