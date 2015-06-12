@@ -1,5 +1,6 @@
 import sys, os, fnmatch
 
+
 def evt_extract(string, sr,
                 rw):  # String of event file ; end index of previous event of 0 for first event ; state (T/F) for replace names with 'EVT_*'
     start = string.lower().find("event = {", sr)
@@ -125,18 +126,7 @@ str_csv = ""
 for cur_evt in evts:
     with open(os.getcwd()+"\\input\\"+cur_evt,mode='r') as f:
         file_str = f.read()
-    file_str = file_str.replace("name=","name =")
-    file_str = file_str.replace("id=","id =")
-    file_str = file_str.replace("event=","event =")
-    file_str = file_str.replace("desc=","desc =")
-    file_str = file_str.replace("action=","action =")
-    file_str = file_str.replace("action_a=","action_a =")
-    file_str = file_str.replace("action_b=","action_b =")
-    file_str = file_str.replace("action_c=","action_c =")
-    file_str = file_str.replace("action_d=","action_d =")
-    file_str = file_str.replace("action_e=","action_e =")
-    file_str = file_str.replace("action_f=","action_f =")
-    file_str = file_str.replace("action_g=","action_g =")
+
     buf = [0, 0, 0, 0, 0, 0]
     while True:
         buf = evt_extract(file_str, buf[5], True)
@@ -146,7 +136,6 @@ for cur_evt in evts:
             str_csv += "EVT_" + str(buf[0]) + "_NAME;" + buf[1] + ";\n"
         if buf[2].find("EVT_") != 0:
             str_csv += "EVT_" + str(buf[0]) + "_DESC;" + buf[2] + ";\n"
-        print(buf[3], buf[4])
         for i in range(buf[3]):
             if buf[4][i].find("EVT_") != 0:
                 str_csv += "EVT_" + str(buf[0]) + "_OPTION" \
