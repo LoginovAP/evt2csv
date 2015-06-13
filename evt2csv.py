@@ -50,8 +50,8 @@ def evt_extract(string, sr, rw):
                 a = i
             elif evt_body[0][i] == "\"" and st == 1:
                 evt_name = [evt_body[0][a + 1:i:1], a, i]
-                if evt_name[0].find("AI_") != 0:
-                    return [evt_id, evt_name[0], '', 0, [], sr+1, string]
+                # if evt_name[0].find("AI_") != 0:
+                #    return [evt_id, evt_name[0], '', 0, [], sr+1, string]
                 if rw and evt_name[0].find("EVT_") != 0:
                     evt_body[0] = evt_body[0][0:a + 1:1] \
                                   + "EVT_" + str(evt_id) + "_NAME" \
