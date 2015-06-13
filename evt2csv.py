@@ -1,6 +1,7 @@
 import os
 
 
+err = 0
 # String of event file ; end index of previous event of 0 for first event ; state (T/F) for replace names with 'EVT_*'
 def evt_extract(string, sr, rw):
     start = string.lower().find("event = {", sr)
@@ -36,7 +37,7 @@ def evt_extract(string, sr, rw):
                 evt_id.replace(" ", "")
                 evt_id = int(evt_id)
                 break
-        print(evt_id)
+        #print('Event', evt_id, "is", end=' ')
         """
         NAME
         """
@@ -49,6 +50,8 @@ def evt_extract(string, sr, rw):
                 a = i
             elif evt_body[0][i] == "\"" and st == 1:
                 evt_name = [evt_body[0][a + 1:i:1], a, i]
+                if evt_name[0].find("AI_") != 0:
+                    return [evt_id, evt_name[0], '', 0, [], sr+1, string]
                 if rw and evt_name[0].find("EVT_") != 0:
                     evt_body[0] = evt_body[0][0:a + 1:1] \
                                   + "EVT_" + str(evt_id) + "_NAME" \
@@ -143,51 +146,59 @@ def evt_extract(string, sr, rw):
         return [evt_id, evt_name[0], evt_desc[0], act_count, evt_actnames, index, new_string]
 
 dirs = os.listdir(os.getcwd())
-print(dirs)
-evts = os.listdir(os.getcwd() + "\\input\\")
-str_csv = ""
-for cur_evt in evts:
-    with open(os.getcwd() + "\\input\\" + cur_evt, mode='r') as f:
-        file_str = f.read()
-    # fix bad syntax
-    file_str = file_str.replace("name=", "name =")
-    file_str = file_str.replace("id=", "id =")
-    file_str = file_str.replace("event=", "event =")
-    file_str = file_str.replace("desc=", "desc =")
-    file_str = file_str.replace("action=", "action =")
-    file_str = file_str.replace("action_a=", "action_a =")
-    file_str = file_str.replace("action_b=", "action_b =")
-    file_str = file_str.replace("action_c=", "action_c =")
-    file_str = file_str.replace("action_d=", "action_d =")
-    file_str = file_str.replace("action_e=", "action_e =")
-    file_str = file_str.replace("action_f=", "action_f =")
-    file_str = file_str.replace("action_g=", "action_g =")
+for j in dirs:
+    for i in j:
+        if i == '.':
+            dirs.remove(j)
+for cur_dir in dirs:
+    events = os.listdir(os.getcwd() + "\\" + cur_dir + "\\")
+    str_csv = ""
+    for cur_evt in events:
+        print("\\"+cur_dir+"\\"+cur_evt)
+        with open(os.getcwd() + "\\" + cur_dir + "\\" + cur_evt, mode='r') as f:
+            file_str = f.read()
+        # fix bad syntax
+        file_str = file_str.replace("name=", "name =")
+        file_str = file_str.replace("id=", "id =")
+        file_str = file_str.replace("event=", "event =")
+        file_str = file_str.replace("desc=", "desc =")
+        file_str = file_str.replace("action=", "action =")
+        file_str = file_str.replace("action_a=", "action_a =")
+        file_str = file_str.replace("action_b=", "action_b =")
+        file_str = file_str.replace("action_c=", "action_c =")
+        file_str = file_str.replace("action_d=", "action_d =")
+        file_str = file_str.replace("action_e=", "action_e =")
+        file_str = file_str.replace("action_f=", "action_f =")
+        file_str = file_str.replace("action_g=", "action_g =")
 
-    buf = [0, 0, 0, 0, 0, 0]
-    # extract all events
-    while True:
-        buf = evt_extract(file_str, buf[5], True)
-        if buf == -1:
-            break
-        if buf[1].find("EVT_") != 0:
-            str_csv += "EVT_" + str(buf[0]) + "_NAME;" + buf[1] + ";\n"
-        if buf[2].find("EVT_") != 0:
-            str_csv += "EVT_" + str(buf[0]) + "_DESC;" + buf[2] + ";\n"
-        if buf[3] == len(buf[4]):
-            print("OK")
-        else:
-            # debug if count of actions != action names
-            print("ERR:", buf[3], buf[4])
+        buf = [0, 0, 0, 0, 0, 0]
+        # extract all events
+        while True:
+            buf = evt_extract(file_str, buf[5], True)
+            if buf == -1:
+                break
+            if buf[1].find("EVT_") != 0:
+                str_csv += "EVT_" + str(buf[0]) + "_NAME;" + buf[1] + ";\n"
+            if buf[2].find("EVT_") != 0:
+                str_csv += "EVT_" + str(buf[0]) + "_DESC;" + buf[2] + ";\n"
+            # if buf[3] == len(buf[4]):
+                # print("OK")
+            # else:
+                # debug if count of actions != action names
+                # print(":", buf[3], buf[4])
+            if buf[3] != len(buf[4]):
+                err +=1
+            for i in range(buf[3]):
+                if buf[4][i].find("EVT_") != 0:
+                    str_csv += "EVT_" + str(buf[0]) + "_OPTION" \
+                               + {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}.get(i, "ERR") \
+                               + ";" + buf[4][i] + ";\n"
+            file_str = buf[6]
+        # write new file
+        with open(os.getcwd() + "\\" + cur_dir + "\\" + cur_evt, mode='w') as f:
+            f.write(file_str)
 
-        for i in range(buf[3]):
-            if buf[4][i].find("EVT_") != 0:
-                str_csv += "EVT_" + str(buf[0]) + "_OPTION" \
-                           + {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}.get(i, "ERR") \
-                           + ";" + buf[4][i] + ";\n"
-        file_str = buf[6]
-    # write new file
-    with open(os.getcwd() + "\\output\\" + cur_evt, mode='w') as f:
-        f.write(file_str)
+    with open(os.getcwd() + "\\" + cur_dir + ".csv", mode='w') as f:
+        f.write(str_csv)
 
-with open(os.getcwd() + "\\output\\out.csv", mode='w') as f:
-    f.write(str_csv)
+print("Errors: ", err)
