@@ -32,7 +32,7 @@ def evt_extract(string, sr, rw):
         """
         s_id = evt_body[0].lower().find("id =")
         for i in range(s_id, s_id + 15):
-            if evt_body[0][i] == "\n":
+            if evt_body[0][i] == "\n" or evt_body[0][i] == "#":
                 evt_id = evt_body[0][s_id + 5:i:1]
                 evt_id.replace(" ", "")
                 evt_id = int(evt_id)
@@ -52,10 +52,12 @@ def evt_extract(string, sr, rw):
                 evt_name = [evt_body[0][a + 1:i:1], a, i]
                 # if evt_name[0].find("AI_") != 0:
                 #    return [evt_id, evt_name[0], '', 0, [], sr+1, string]
-                if rw and evt_name[0].find("EVT_") != 0:
+                if rw and evt_name[0].find("EVT_") == -1 and evt_name[0].lower().find("_name") == -1 and \
+                           evt_name[0].find(str(evt_id)) == -1:
                     evt_body[0] = evt_body[0][0:a + 1:1] \
                                   + "EVT_" + str(evt_id) + "_NAME" \
                                   + evt_body[0][i:len(evt_body[0]):1]
+
                 break
         """
         DESCRIPTION
@@ -69,7 +71,8 @@ def evt_extract(string, sr, rw):
                 a = i
             elif evt_body[0][i] == "\"" and st == 1:
                 evt_desc = [evt_body[0][a + 1:i:1], a, i]
-                if rw and evt_desc[0].find("EVT_") != 0:
+                if rw and evt_desc[0].find("EVT_") == -1 and evt_desc[0].lower().find("_desc") == -1 and \
+                        evt_desc[0].find(str(evt_id)) == -1:
                     evt_body[0] = evt_body[0][0:a + 1:1] + "EVT_" + str(evt_id) + "_DESC" + evt_body[0][
                                                                                             i:len(evt_body[0]):1]
 
@@ -126,10 +129,16 @@ def evt_extract(string, sr, rw):
                     elif evt_body[0][i] == "\"" and st == 1:
                         evt_actnames.append(evt_body[0][a + 1:i:1])
 
-                        if rw and evt_actnames[::-1][0].find("EVT_") != 0:
+                        if rw and evt_actnames[::-1][0].find("EVT_") == -1 and \
+                        evt_actnames[::-1][0].find(str(evt_id)) == -1 and \
+                        evt_actnames[::-1][0].lower().find("_name") == -1 and \
+                        evt_actnames[::-1][0].lower().find("_desc") == -1 and \
+                        evt_actnames[::-1][0].lower().find("_act") == -1:
                             evt_body[0] = evt_body[0][0:a + 1:1] + "EVT_" + str(evt_id) + "_OPTION" \
                                           + {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}.get(j, "ERR") \
                                           + evt_body[0][i:len(evt_body[0]):1]
+                        else:
+                            evt_actnames = evt_actnames[0:len(evt_actnames):1]
                         break
             else:
                 # debug for ERR
@@ -143,6 +152,12 @@ def evt_extract(string, sr, rw):
         else:
             new_string = ""
         index = len(part1 + evt_body[0]) + 1
+        # fix \n in strings (for CSV)
+        evt_name[0] = evt_name[0].replace("\n", "\\n")
+        evt_desc[0] = evt_desc[0].replace("\n", "\\n")
+        for i in evt_actnames:
+            i = i.replace("\n", "\\n")
+
         return [evt_id, evt_name[0], evt_desc[0], act_count, evt_actnames, index, new_string]
 
 dirs = os.listdir(os.getcwd())
@@ -177,10 +192,10 @@ for cur_dir in dirs:
             buf = evt_extract(file_str, buf[5], True)
             if buf == -1:
                 break
-            if buf[1].find("EVT_") != 0:
-                str_csv += "EVT_" + str(buf[0]) + "_NAME;" + buf[1] + ";\n"
-            if buf[2].find("EVT_") != 0:
-                str_csv += "EVT_" + str(buf[0]) + "_DESC;" + buf[2] + ";\n"
+            if buf[1].find("EVT_") == -1 and buf[1].find(str(buf[0])) == -1 and buf[1].lower().find("_name") == -1:
+                str_csv += "EVT_" + str(buf[0]) + "_NAME;" + buf[1] + ";;;;;;;;;;X;\n"
+            if buf[2].find("EVT_") == -1 and buf[2].find(str(buf[0])) == -1 and buf[2].lower().find("_desc") == -1:
+                str_csv += "EVT_" + str(buf[0]) + "_DESC;" + buf[2] + ";;;;;;;;;;X;\n"
             # if buf[3] == len(buf[4]):
                 # print("OK")
             # else:
@@ -189,10 +204,13 @@ for cur_dir in dirs:
             if buf[3] != len(buf[4]):
                 err +=1
             for i in range(buf[3]):
-                if buf[4][i].find("EVT_") != 0:
+                print(buf[4], buf[3], i, str(buf[0]))
+                if buf[4][i].find("EVT_") == -1 and buf[4][i].find(str(buf[0])) == -1 and \
+                        buf[4][i].lower().find("_name") == -1 and buf[4][i].lower().find("_desc") == -1 and \
+                        buf[4][i].lower().find("_act") == -1:
                     str_csv += "EVT_" + str(buf[0]) + "_OPTION" \
                                + {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}.get(i, "ERR") \
-                               + ";" + buf[4][i] + ";\n"
+                               + ";" + buf[4][i] + ";;;;;;;;;;X;\n"
             file_str = buf[6]
         # write new file
         with open(os.getcwd() + "\\" + cur_dir + "\\" + cur_evt, mode='w') as f:
