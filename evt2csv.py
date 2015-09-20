@@ -44,6 +44,16 @@ def evt_extract(string, sr, rw):
         a = 0
         st = 0
         for i in range(s_name, len(evt_body[0])):
+            if evt_body[0][i] == "\n" and st == 0:
+                st = 2
+            if st == 2:
+                evt_name = [evt_body[0][s_name+6:i-1:1], s_name+7, i+1]
+                if rw and evt_name[0].lower().find("evt_") == -1 and evt_name[0].lower().find("_name") == -1 and \
+                           evt_name[0].find(str(evt_id)) == -1 and evt_name[0].find("ai_") == -1:
+                    evt_body[0] = evt_body[0][0:a:1] \
+                                  + "\"EVT_" + str(evt_id) + "_NAME\"" \
+                                  + evt_body[0][i:len(evt_body[0]):1]
+                    break
             if evt_body[0][i] == "\"" and st == 0:
                 st = 1
                 a = i
@@ -51,8 +61,8 @@ def evt_extract(string, sr, rw):
                 evt_name = [evt_body[0][a + 1:i:1], a, i]
                 # if evt_name[0].find("AI_") != 0:
                 #    return [evt_id, evt_name[0], '', 0, [], sr+1, string]
-                if rw and evt_name[0].find("EVT_") == -1 and evt_name[0].lower().find("_name") == -1 and \
-                           evt_name[0].find(str(evt_id)) == -1:
+                if rw and evt_name[0].lower().find("evt_") == -1 and evt_name[0].lower().find("_name") == -1 and \
+                           evt_name[0].find(str(evt_id)) == -1 and evt_name[0].find("ai_") == -1:
                     evt_body[0] = evt_body[0][0:a + 1:1] \
                                   + "EVT_" + str(evt_id) + "_NAME" \
                                   + evt_body[0][i:len(evt_body[0]):1]
@@ -70,8 +80,8 @@ def evt_extract(string, sr, rw):
                 a = i
             elif evt_body[0][i] == "\"" and st == 1:
                 evt_desc = [evt_body[0][a + 1:i:1], a, i]
-                if rw and evt_desc[0].find("EVT_") == -1 and evt_desc[0].lower().find("_desc") == -1 and \
-                        evt_desc[0].find(str(evt_id)) == -1:
+                if rw and evt_desc[0].lower().find("evt_") == -1 and evt_desc[0].lower().find("_desc") == -1 and \
+                        evt_desc[0].find(str(evt_id)) == -1 and evt_desc[0].find("ai_") == -1:
                     evt_body[0] = evt_body[0][0:a + 1:1] + "EVT_" + str(evt_id) + "_DESC" + evt_body[0][
                                                                                             i:len(evt_body[0]):1]
 
@@ -122,16 +132,34 @@ def evt_extract(string, sr, rw):
                 a = 0
                 st = 0
                 for i in range(s_actname, len(evt_body[0])):
+                    if evt_body[0][i] == "\n" and st == 0:
+                        st = 2
+                    if st == 2:
+                        evt_actnames.append(evt_body[0][s_actname+6:i-1:1])
+
+                        if rw and evt_actnames[::-1][0].lower().find("evt_") == -1 and \
+                        evt_actnames[::-1][0].find(str(evt_id)) == -1 and \
+                        evt_actnames[::-1][0].lower().find("_name") == -1 and \
+                        evt_actnames[::-1][0].lower().find("_desc") == -1 and \
+                        evt_actnames[::-1][0].lower().find("ai_") == -1 and \
+                        evt_actnames[::-1][0].lower().find("_act") == -1:
+                            evt_body[0] = evt_body[0][0:a + 1:1] + "\"EVT_" + str(evt_id) + "_OPTION" \
+                                          + {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}.get(j, "ERR") \
+                                          + "\"" + evt_body[0][i:len(evt_body[0]):1]
+                        else:
+                            evt_actnames = evt_actnames[0:len(evt_actnames):1]
+                        break
                     if evt_body[0][i] == "\"" and st == 0:
                         st = 1
                         a = i
                     elif evt_body[0][i] == "\"" and st == 1:
                         evt_actnames.append(evt_body[0][a + 1:i:1])
 
-                        if rw and evt_actnames[::-1][0].find("EVT_") == -1 and \
+                        if rw and evt_actnames[::-1][0].lower().find("evt_") == -1 and \
                         evt_actnames[::-1][0].find(str(evt_id)) == -1 and \
                         evt_actnames[::-1][0].lower().find("_name") == -1 and \
                         evt_actnames[::-1][0].lower().find("_desc") == -1 and \
+                        evt_actnames[::-1][0].lower().find("ai_") == -1 and \
                         evt_actnames[::-1][0].lower().find("_act") == -1:
                             evt_body[0] = evt_body[0][0:a + 1:1] + "EVT_" + str(evt_id) + "_OPTION" \
                                           + {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}.get(j, "ERR") \
@@ -151,11 +179,14 @@ def evt_extract(string, sr, rw):
         else:
             new_string = ""
         index = len(part1 + evt_body[0]) + 1
-        # fix \n in strings (for CSV)
+        # fix \n in strings (for CSV) up: fix ";"
         evt_name[0] = evt_name[0].replace("\n", "\\n")
         evt_desc[0] = evt_desc[0].replace("\n", "\\n")
+        evt_name[0] = evt_name[0].replace(";", ",")
+        evt_desc[0] = evt_desc[0].replace(";", ",")
         for i in evt_actnames:
             i = i.replace("\n", "\\n")
+            i = i.replace(";", ",")
 
         return [evt_id, evt_name[0], evt_desc[0], act_count, evt_actnames, index, new_string]
 
